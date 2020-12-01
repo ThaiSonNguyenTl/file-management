@@ -66,3 +66,44 @@ router.put('/api/(.*)', Tools.loadRealPath, Tools.checkPathExists, bodyParser(),
     this.body = 'Arg Type Error!';
   }
 });
+router.post('/api/(.*)', Tools.loadRealPath, Tools.checkPathNotExists, bodyParser(), function *() {
+    var type = this.query.type;
+    var p = this.request.fPath;
+    if (!type) {
+      this.status = 400;
+      this.body = 'Lack Arg Type!';
+    }
+    else if (type === 'CREATE_FOLDER') {
+      yield * FileManager.mkdirs(p);
+      this.body = 'Create Folder Succeed!';
+    }
+    else if (type === 'UPLOAD_FILE') {
+      var formData = yield formParser(this.req);
+      if (formData.fieldname === 'upload'){
+        var writeStream = origFs.createWriteStream(p);
+        formData.pipe(writeStream);
+        this.body = 'Upload File Succeed!';
+      }
+      else {
+        this.status = 400;
+        this.body = 'Lack Upload File!';
+      }
+    }
+    else if (type === 'CREATE_ARCHIVE') {
+      var src = this.request.body.src;
+      if (!src) return this.status = 400;
+      src = src.map(function(file) {
+        return FilePath(file, true);
+      })
+      var archive = p;
+      yield * FileManager.archive(src, archive, C.data.root, !!this.request.body.embedDirs);
+      this.body = 'Create Archive Succeed!';
+    }
+    else {
+      this.status = 400;
+      this.body = 'Arg Type Error!';
+    }
+  });
+  
+  module.exports = router.middleware();
+  
