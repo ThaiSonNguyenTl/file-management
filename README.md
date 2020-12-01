@@ -11,6 +11,22 @@ Directory tree navigation
 Copy, Move, Rename (Interactive UX)
 Delete, Edit, Preview, Download
 File permissions (Unix chmod style)
+Directory browsing
+ Filesize
+ Permissions
+ Owner
+ Folder creation
+ File uploads
+ Bulk file uploads
+ Large file uploads (sharded)
+ File/folder renaming
+ Bulk file/folder selection
+ Delete
+ Recursive directory delete
+ Move
+ Copy
+ Download archive
+ Change permissions
 Mobile support
 USAGE
   1.git clone https://github.com/ThaiSonNguyenTl/file-management.git
