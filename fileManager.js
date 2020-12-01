@@ -42,3 +42,54 @@ FileManager.move = function *(srcs, dest) {
     yield fse.move(srcs[i], path.join(dest, basename));
   }
 };
+FileManager.rename = function *(src, dest) {
+    yield fse.move(src, dest);
+  };
+  
+  FileManager.archive = function *(src, archive, dirPath, embedDirs) {
+    var zip = new JSZip();
+    var baseName = path.basename(archive, '.zip');
+  
+    function* addFile(file) {
+      var data = yield fs.readFile(file);
+      var name;
+      if (embedDirs) {
+        name = file;
+        if (name.indexOf(dirPath) === 0) {
+          name = name.substring(dirPath.length);
+        }
+      } else {
+        name = path.basename(file);
+      }
+      zip.file(name, data);
+      C.logger.info('Added ' + name + ' ' + data.length + ' bytes to archive ' + archive);
+    }
+  
+    function* addDir(dir) {
+      var contents = yield fs.readdir(dir);
+      for (var file of contents) {
+        yield * process(path.join(dir, file));
+      }
+    }
+  
+    function* process(fp) {
+      var stat = yield fs.stat(fp);
+      if (stat.isDirectory()) {
+        yield * addDir(fp);
+      } else {
+        yield addFile(fp);
+      }
+    }
+  
+    // Add each src.  For directories, do the entire recursive dir.
+    for (var file of src) {
+      yield * process(file);
+    }
+  
+    // Generate the zip and store the final.
+    var data = yield zip.generateAsync({type:'nodebuffer',compression:'DEFLATE'});
+    yield fs.writeFile(archive, data, 'binary');
+  };
+  
+  module.exports = FileManager;
+  
